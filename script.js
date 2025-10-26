@@ -35,7 +35,9 @@ function deleteText() {
 
 typeText();
 
+// =========================
 // Smooth Scroll for Internal Links
+// =========================
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   anchor.addEventListener("click", function(e) {
     e.preventDefault();
@@ -45,7 +47,9 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   });
 });
 
+// =========================
 // Simple Contact Form Handler (Front-end Only)
+// =========================
 const form = document.querySelector("form");
 form.addEventListener("submit", function(e) {
   e.preventDefault();
@@ -54,36 +58,32 @@ form.addEventListener("submit", function(e) {
 });
 
 // =========================
-// Modal Video Handler
+// Modal Video Handler (Local models folder)
 // =========================
 function openModal(videoSrc, title) {
   const modal = document.getElementById("videoModal");
   const video = document.getElementById("modalVideo");
   const videoTitle = document.getElementById("videoTitle");
 
-  // Convert relative path (like 'models/arm.mp4') to full GitHub raw URL
-  const githubBase = "https://raw.githubusercontent.com/Kweesi360/aero-portfolio/main/";
-  const fullVideoSrc = githubBase + videoSrc;
+  // Force lowercase path for consistency
+  const fixedSrc = videoSrc.toLowerCase();
 
-  video.src = fullVideoSrc;
+  video.src = fixedSrc;
   videoTitle.innerText = title;
 
-  // Ensure video plays normally (no rotation for now)
-  video.style.transform = "none";
-
   modal.style.display = "flex";
-  video.play(); // auto-start playback
+  video.load();   // reloads the source
+  video.play();   // start playing automatically
 }
 
-
-// Close modal when user clicks outside video or presses ESC
+// Close modal when clicking outside video or pressing ESC
 window.addEventListener("click", (e) => {
   const modal = document.getElementById("videoModal");
   const video = document.getElementById("modalVideo");
   if (e.target === modal) {
     modal.style.display = "none";
     video.pause();
-    video.src = ""; // stop playback completely
+    video.src = "";
   }
 });
 
@@ -98,7 +98,7 @@ window.addEventListener("keydown", (e) => {
 });
 
 // =========================
-// Live WebSocket Subtitles (optional feature)
+// Live WebSocket Subtitles (optional)
 // =========================
 const subtitleBox = document.getElementById('subtitle-box');
 const socket = new WebSocket("ws://localhost:8765");
@@ -108,7 +108,7 @@ socket.onmessage = (event) => {
   subtitleBox.innerHTML = `<strong>${data.speaker}:</strong> ${data.text}`;
   subtitleBox.style.display = 'block';
 
-  // hide subtitle automatically after a few seconds
+  // Hide subtitle automatically after a few seconds
   setTimeout(() => {
     subtitleBox.style.display = 'none';
   }, 5000);

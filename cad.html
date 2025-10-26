@@ -123,6 +123,7 @@
       cursor: pointer;
     }
   </style>
+  
 </head>
 <body>
   <h1>My CAD Portfolio</h1>
@@ -245,61 +246,50 @@
 </div>
 
 
-  <!-- Modal -->
-  <div class="modal" id="videoModal">
-    <span class="close" onclick="closeModal()">&times;</span>
-    <h2 id="videoTitle"></h2>
-    <video id="modalVideo" controls autoplay></video>
-  </div>
+ <!-- Modal -->
+<div class="modal" id="videoModal">
+  <span class="close" onclick="closeModal()">&times;</span>
+  <h2 id="videoTitle"></h2>
+  <video id="modalVideo" controls autoplay></video>
+</div>
 
-  <script>
-    function openModal(videoSrc, title) {
-      const modal = document.getElementById("videoModal");
-      const video = document.getElementById("modalVideo");
-      const videoTitle = document.getElementById("videoTitle");
+<script>
+  function openModal(videoFile, title) {
+    const modal = document.getElementById("videoModal");
+    const video = document.getElementById("modalVideo");
+    const videoTitle = document.getElementById("videoTitle");
 
-      video.src = videoSrc;
-      videoTitle.innerText = title;
+    // Path to your local models folder
+    const videoSrc = `models/${videoFile}`;
 
-      // Show modal
-      modal.style.display = "flex";
+    video.src = videoSrc;
+    videoTitle.innerText = title;
 
-      // Adjust video size based on landscape ratio
-      video.addEventListener('loadedmetadata', () => {
-        const aspectRatio = video.videoWidth / video.videoHeight;
-        const maxHeight = window.innerHeight * 0.8;
-        const containerWidth = maxHeight * aspectRatio;
+    modal.style.display = "flex";
 
-        video.style.width = containerWidth + "px";
-        video.style.height = maxHeight + "px";
-      }, { once: true });
+    // Adjust video size dynamically
+    video.addEventListener('loadedmetadata', () => {
+      const aspectRatio = video.videoWidth / video.videoHeight;
+      const maxHeight = window.innerHeight * 0.8;
+      const containerWidth = maxHeight * aspectRatio;
 
-      video.play();
-    }
+      video.style.width = containerWidth + "px";
+      video.style.height = maxHeight + "px";
+    }, { once: true });
 
-    function closeModal() {
-      const modal = document.getElementById("videoModal");
-      const video = document.getElementById("modalVideo");
+    video.play();
+  }
 
-      video.pause();
-      video.src = "";
-      video.style.width = "";
-      video.style.height = "";
-      modal.style.display = "none";
-    }
+  function closeModal() {
+    const modal = document.getElementById("videoModal");
+    const video = document.getElementById("modalVideo");
 
-    // Optional: Resize video dynamically on window resize
-    window.addEventListener('resize', () => {
-      const video = document.getElementById("modalVideo");
-      if (video.src) {
-        const aspectRatio = video.videoWidth / video.videoHeight;
-        const maxHeight = window.innerHeight * 0.8;
-        const containerWidth = maxHeight * aspectRatio;
-
-        video.style.width = containerWidth + "px";
-        video.style.height = maxHeight + "px";
-      }
-    });
-  </script>
+    video.pause();
+    video.src = "";
+    video.style.width = "";
+    video.style.height = "";
+    modal.style.display = "none";
+  }
+</script>
 </body>
 </html>
