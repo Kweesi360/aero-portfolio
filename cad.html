@@ -123,7 +123,7 @@
       cursor: pointer;
     }
   </style>
-  
+
 </head>
 <body>
   <h1>My CAD Portfolio</h1>
@@ -254,30 +254,26 @@
 </div>
 
 <script>
-  function openModal(videoFile, title) {
+  function openModal(videoSrc, title) {
     const modal = document.getElementById("videoModal");
     const video = document.getElementById("modalVideo");
     const videoTitle = document.getElementById("videoTitle");
 
-    // Path to your local models folder
-    const videoSrc = `models/${videoFile}`;
-
+    video.pause();
     video.src = videoSrc;
-    videoTitle.innerText = title;
+    video.load(); // important
+    video.play().catch(err => console.warn("Autoplay prevented:", err));
 
+    videoTitle.innerText = title;
     modal.style.display = "flex";
 
-    // Adjust video size dynamically
-    video.addEventListener('loadedmetadata', () => {
+    video.addEventListener("loadedmetadata", () => {
       const aspectRatio = video.videoWidth / video.videoHeight;
       const maxHeight = window.innerHeight * 0.8;
       const containerWidth = maxHeight * aspectRatio;
-
       video.style.width = containerWidth + "px";
       video.style.height = maxHeight + "px";
     }, { once: true });
-
-    video.play();
   }
 
   function closeModal() {
@@ -290,6 +286,17 @@
     video.style.height = "";
     modal.style.display = "none";
   }
+
+  window.addEventListener('resize', () => {
+    const video = document.getElementById("modalVideo");
+    if (video.src) {
+      const aspectRatio = video.videoWidth / video.videoHeight;
+      const maxHeight = window.innerHeight * 0.8;
+      const containerWidth = maxHeight * aspectRatio;
+      video.style.width = containerWidth + "px";
+      video.style.height = maxHeight + "px";
+    }
+  });
 </script>
 </body>
 </html>
