@@ -53,22 +53,56 @@ form.addEventListener("submit", function(e) {
   form.reset();
 });
 
-
+// =========================
+// Modal Video Handler
+// =========================
 function openModal(videoSrc, title) {
   const modal = document.getElementById("videoModal");
   const video = document.getElementById("modalVideo");
   const videoTitle = document.getElementById("videoTitle");
 
-  video.src = videoSrc;
+  // Automatically convert relative paths to GitHub raw links
+  const base = "https://raw.githubusercontent.com/Kweesi360/aero-portfolio/main/";
+  const finalSrc = videoSrc.startsWith("http")
+    ? videoSrc
+    : base + videoSrc.toLowerCase();
+
+  video.src = finalSrc;
   videoTitle.innerText = title;
 
-  // Rotate video 90 degrees for landscape display
+  // Optional: Rotate video if needed for display
   video.style.transform = "rotate(90deg)";
 
   modal.style.display = "flex";
+
+  // Autoplay when opened
+  video.play();
 }
 
-// Live WebSocket subtitles
+// Close modal when user clicks outside video or presses ESC
+window.addEventListener("click", (e) => {
+  const modal = document.getElementById("videoModal");
+  const video = document.getElementById("modalVideo");
+  if (e.target === modal) {
+    modal.style.display = "none";
+    video.pause();
+    video.src = ""; // stop playback completely
+  }
+});
+
+window.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") {
+    const modal = document.getElementById("videoModal");
+    const video = document.getElementById("modalVideo");
+    modal.style.display = "none";
+    video.pause();
+    video.src = "";
+  }
+});
+
+// =========================
+// Live WebSocket Subtitles (optional feature)
+// =========================
 const subtitleBox = document.getElementById('subtitle-box');
 const socket = new WebSocket("ws://localhost:8765");
 
