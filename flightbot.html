@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Flight Bot — Demo</title>
+  <style>
+    :root {
+      --accent: #00fffc;
+      --bg: #000;
+      --white: #fff;
+    }
+    html,body {
+      height:100%; margin:0; background:var(--bg);
+      font-family: Inter, Roboto, Arial, sans-serif; color:var(--white);
+    }
+    .centered {
+      display:flex; align-items:center; justify-content:center;
+    }
+
+    /* Cockpit overlay fullscreen */
+    #preview {
+      position:fixed; inset:0; z-index:5; background:#000;
+      display:flex; flex-direction:column; align-items:center; justify-content:center;
+      transition:opacity .6s ease, visibility .6s;
+    }
+    #cockpit-image {
+      position:fixed; inset:0; background: url('images/Flightsim.webp') center/cover no-repeat;
+      width:100%; height:100%; z-index:5;
+    }
+    #intro-text {
+      position:absolute; top:40%; width:100%; text-align:center; font-size:2em; color:var(--accent);
+      text-shadow:2px 2px 12px #000;
+    }
+    #run-btn {
+      position:absolute; bottom:15%; left:50%; transform:translateX(-50%);
+      background:var(--accent); color:#000; border:none; padding:14px 26px; font-weight:700;
+      font-size:1.2rem; border-radius:12px; cursor:pointer;
+      box-shadow:0 8px 30px rgba(0,0,0,0.6); transition:transform .12s ease; z-index:6;
+    }
+    #run-btn:active { transform: translate(-50%, 2px); }
+
+    /* Typing overlay fullscreen */
+    #typing-overlay {
+      position:fixed; inset:0; background:#000; z-index:10;
+      display:none; flex-direction:column; align-items:center; padding-top:48px;
+      transition:opacity .6s ease;
+    }
+    #robot-top {
+      width: 200px;       /* adjust size as needed */
+      height: 200px;
+      object-fit: contain; /* keep proportions */
+      margin-bottom: 32px; /* space below robot */
+      filter: drop-shadow(0 12px 30px rgba(0,0,0,0.8));
+    }
+    .typing-panel {
+      width:min(960px,92%); max-width:1100px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:12px; padding:18px; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+      border: 1px solid rgba(255,255,255,0.04);
+    }
+    #typing-display {
+      background:transparent; min-height:110px; color:var(--white); font-size:1.25rem; line-height:1.5;
+      font-family: ui-monospace, Menlo, Monaco, monospace; white-space:pre-wrap; word-wrap:break-word;
+    }
+
+    /* video container */
+    #video-container {
+      position:fixed; inset:0; background: #000; z-index:20; display:none; align-items:center; justify-content:center;
+    }
+    video#flight-video { width:100%; height:100%; object-fit:cover; background: #000; }
+
+    .fade-out { opacity:0; visibility:hidden; pointer-events:none; }
+    .fade-in { opacity:1; visibility:visible; pointer-events:auto; }
+  </style>
+</head>
+<body>
+
+  <!-- Preview / cockpit overlay -->
+  <div id="preview" class="centered">
+    <div id="cockpit-image"></div>
+    <div id="intro-text">Flight Bot — Demonstration</div>
+    <button id="run-btn">RUN FLIGHT SIMULATION NOW</button>
+  </div>
+
+  <!-- Typing overlay -->
+<div id="typing-overlay" class="centered" style="flex-direction:column;">
+  <!-- Robot image -->
+  <img id="robot-top" src="images/robotic_ai.jpg" alt="Robot AI logo">
+
+  <div class="typing-panel">
+    <div id="typing-display"></div>
+  </div>
+</div>
+
+<style>
+  /* Robot image styling */
+  #robot-top {
+    width: 320px;          /* <-- adjust this to resize robot */
+    height: auto;          /* keeps aspect ratio */
+    margin-bottom: 28px;
+    filter: drop-shadow(0 12px 30px rgba(0,0,0,0.8)) 
+            brightness(1.2) 
+            contrast(1.2);
+    mix-blend-mode: lighten; /* removes black background edges on dark page */
+    transition: width 0.3s ease, filter 0.3s ease; /* optional smooth resize */
+  }
+
+  /* Optional: hover to slightly enlarge robot for effect */
+  #robot-top:hover {
+    width: 240px; /* adjust max size */
+    filter: drop-shadow(0 15px 35px rgba(0,0,0,0.8)) brightness(1.3) contrast(1.3);
+  }
+</style>
+
+
+  <!-- Video container -->
+  <div id="video-container" class="centered">
+    <video id="flight-video" playsinline preload="auto">
+      <source src="Flightbotsim.mp4" type="video/mp4">
+      Your browser does not support the video tag.
+    </video>
+  </div>
+
+  <script>
+    const preview = document.getElementById('preview');
+    const runBtn = document.getElementById('run-btn');
+    const typingOverlay = document.getElementById('typing-overlay');
+    const typingDisplay = document.getElementById('typing-display');
+    const videoContainer = document.getElementById('video-container');
+    const flightVideo = document.getElementById('flight-video');
+
+    const flightBotText = `The next window showcases a pre-recorded simulation of FlightBot in action. Due to hardware limitations, running the live Python environment in real time proved challenging, resulting in occasional lag and performance drops within the Python display window.
+
+To ensure a seamless experience, this recording presents the complete demonstration. It captures a high-intensity cockpit sequence in which an aircraft experiences dual engine failure during final approach for landing. The simulation features synchronized subtitles, FlightBot’s activation procedure, authentic cockpit alarm sounds, and communication between the Pilot, Co-Pilot, Cabin Crew, and Air Traffic Control, showcasing their calm composure as they trust FlightBot’s guidance while navigating toward the runway with or without ILS support.
+
+Immerse yourself in a true-to-life aviation emergency powered by FlightBot’s intelligent response system, a fusion of code, realism, and human precision.`;
+
+    // WebAudio context for keystroke sounds
+    let audioCtx = null;
+    function ensureAudioContext() {
+      if (!audioCtx) { audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }
+    }
+    function playKeystrokeSound() {
+      ensureAudioContext();
+      const ctx = audioCtx;
+      const g = ctx.createGain();
+      g.gain.value=0;
+      g.connect(ctx.destination);
+      const o = ctx.createOscillator();
+      o.type='square'; o.frequency.value=1200+Math.random()*200-100; o.connect(g);
+      const bufferSize = 0.05*ctx.sampleRate|0;
+      const noiseBuffer = ctx.createBuffer(1,bufferSize,ctx.sampleRate);
+      const data = noiseBuffer.getChannelData(0);
+      for(let i=0;i<bufferSize;i++) data[i]=(Math.random()*2-1)*(1-i/bufferSize);
+      const noise = ctx.createBufferSource();
+      noise.buffer=noiseBuffer;
+      const noiseFilter = ctx.createBiquadFilter(); noiseFilter.type='bandpass';
+      noiseFilter.frequency.value=2200;
+      noise.connect(noiseFilter); noiseFilter.connect(g);
+      const now=ctx.currentTime;
+      g.gain.setValueAtTime(0, now);
+      g.gain.linearRampToValueAtTime(0.18, now+0.002);
+      g.gain.exponentialRampToValueAtTime(0.0001, now+0.09);
+      o.start(now); noise.start(now); noise.stop(now+0.09); o.stop(now+0.12);
+    }
+
+    async function performTyping(text) {
+      typingDisplay.innerText='';
+      typingOverlay.style.display='flex';
+      await new Promise(r=>setTimeout(r,200));
+      for(let i=0;i<text.length;i++){
+        const ch=text[i]; typingDisplay.innerText+=ch;
+        if(ch!==' '&&ch!=='\n'&&ch!=='\t') playKeystrokeSound();
+        typingDisplay.scrollTop=typingDisplay.scrollHeight;
+        const delay=45+Math.random()*20-10;
+        await new Promise(r=>setTimeout(r,delay));
+      }
+      await new Promise(r=>setTimeout(r,500));
+    }
+
+    async function runSimulation() {
+      preview.classList.add('fade-out');
+      preview.style.opacity=0; preview.style.visibility='hidden';
+      await performTyping(flightBotText);
+      typingOverlay.style.transition='opacity .8s ease';
+      typingOverlay.style.opacity=0;
+      setTimeout(()=>{ typingOverlay.style.display='none'; startVideo(); },820);
+    }
+
+    function startVideo(){
+      videoContainer.style.display='flex';
+      videoContainer.style.opacity=0;
+      setTimeout(()=>{ videoContainer.style.opacity=1; },30);
+      flightVideo.currentTime=0;
+      flightVideo.volume=1.0;
+      flightVideo.play().catch(()=>{});
+      flightVideo.onended=()=>{ videoContainer.style.opacity=0; setTimeout(()=>{ videoContainer.style.display='none'; preview.style.opacity=1; preview.style.visibility='visible'; },500);}
+    }
+
+    runBtn.addEventListener('click', ()=>{ runSimulation(); });
+  </script>
+
+</body>
+</html>
+``

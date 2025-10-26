@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CAD Portfolio</title>
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+    body {
+      background: url('planeshot.jpg') no-repeat center center fixed;
+      background-size: cover;
+      font-family: Arial, sans-serif;
+      color: white;
+    }
+
+    h1 {
+      text-align: center;
+      padding: 20px;
+      font-size: 2rem;
+      text-shadow: 2px 2px 8px black;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 20px;
+      padding: 40px;
+    }
+
+    /* 📁 Folder-style Card */
+    .card {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      cursor: pointer;
+      box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.6);
+      border: 3px solid #FFD54F;
+      transition: 
+        transform 0.4s ease,
+        box-shadow 0.4s ease,
+        border-color 0.4s ease;
+      transform-style: preserve-3d;
+    }
+
+    /* Folder top tab */
+    .card::before {
+      content: "";
+      position: absolute;
+      top: -12px;
+      left: 20px;
+      width: 80px;
+      height: 15px;
+      background: #FFD54F;
+      border-top-left-radius: 8px;
+      border-top-right-radius: 8px;
+      box-shadow: 0px 2px 6px rgba(0,0,0,0.3);
+    }
+
+    /* 🖱️ 3D Tilt + Glow */
+    .card:hover {
+      transform: rotateX(8deg) rotateY(4deg) scale(1.06);
+      box-shadow: 0px 15px 30px rgba(255, 213, 79, 0.7);
+      border-color: #FFEB3B;
+    }
+
+    .card img {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* Transparent overlay text */
+    .overlay {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      background: linear-gradient(transparent, rgba(0,0,0,0.8));
+      color: white;
+      padding: 10px;
+      text-align: center;
+      font-weight: bold;
+      font-size: 1.1rem;
+    }
+
+    /* Modal styling */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      flex-direction: column;
+    }
+
+    .modal video {
+      border: 3px solid #FFD54F;
+      border-radius: 10px;
+      max-width: 90%;
+      max-height: 80%;
+    }
+
+    .modal h2 {
+      text-align: center;
+      margin-bottom: 15px;
+      color: white;
+    }
+
+    .close {
+      position: absolute;
+      top: 20px;
+      right: 40px;
+      font-size: 35px;
+      color: white;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h1>My CAD Portfolio</h1>
+
+  <div class="container">
+    <div class="card" onclick="openModal('models/ARM.MP4', 'Arm')">
+      <img src="thumbnails/ARM.jpg" alt="Arm">
+      <div class="overlay">Arm</div>
+    </div>
+    <div class="card" onclick="openModal('models/DRONE.MP4', 'Drone')">
+      <img src="thumbnails/DRONE.jpg" alt="Drone">
+      <div class="overlay">Drone</div>
+    </div>
+    <div class="card" onclick="openModal('models/TOP LINK.MP4', 'TOP LINK')">
+      <img src="thumbnails/TOP LINK.jpg" alt="Top Link">
+      <div class="overlay">Top Link</div>
+    </div>
+    <div class="card" onclick="openModal('models/BALL BEARING.MP4', 'Ball Bearing')">
+      <img src="thumbnails/BALL BEARING.jpg" alt="Ball Bearing">
+      <div class="overlay">Ball Bearing</div>
+    </div>
+    <div class="card" onclick="openModal('models/DRONE ARM.MP4', 'Drone Arm')">
+      <img src="thumbnails/DRONE ARM.jpg" alt="Drone Arm">
+      <div class="overlay">Drone Arm</div>
+    </div>
+    <div class="card" onclick="openModal('models/GATE VALVE.MP4', 'Gate Valve')">
+      <img src="thumbnails/GATE VALVE.jpg" alt="Gate Valve">
+      <div class="overlay">Gate Valve</div>
+    </div>
+    <div class="card" onclick="openModal('models/GEAR ASSEMBLY.MP4', 'Gear Assembly')">
+      <img src="thumbnails/GEAR ASSEMBLY.jpg" alt="Gear Assembly">
+      <div class="overlay">Gear Assembly</div>
+    </div>
+    <div class="card" onclick="openModal('models/GEAR.MP4', 'Gear')">
+      <img src="thumbnails/GEAR.jpg" alt="Gear">
+      <div class="overlay">Gear</div>
+    </div>
+    <div class="card" onclick="openModal('models/GEARS.MP4', 'Gears')">
+      <img src="thumbnails/GEARS.jpg" alt="Gears">
+      <div class="overlay">Gears</div>
+    </div>
+    <div class="card" onclick="openModal('models/PLIER.MP4', 'Plier')">
+      <img src="thumbnails/PLIER.jpg" alt="Plier">
+      <div class="overlay">Plier</div>
+    </div>
+    <div class="card" onclick="openModal('models/PREDATOR.MP4', 'Predator')">
+      <img src="thumbnails/PREDATOR.jpg" alt="Predator">
+      <div class="overlay">Predator</div>
+    </div>
+    <div class="card" onclick="openModal('models/QUADCOPTER DRONE.MP4', 'Quadcopter Drone')">
+      <img src="thumbnails/QUADCOPTER DRONE.jpg" alt="Quadcopter Drone">
+      <div class="overlay">Quadcopter Drone</div>
+    </div>
+    <div class="card" onclick="openModal('models/ScREW.MP4', 'Screw')">
+      <img src="thumbnails/ScREW.jpg" alt="Screw">
+      <div class="overlay">Screw</div>
+    </div>
+    <div class="card" onclick="openModal('models/SPANNER.MP4', 'Spanner')">
+      <img src="thumbnails/SPANNER.jpg" alt="Spanner">
+      <div class="overlay">Spanner</div>
+    </div>
+    <div class="card" onclick="openModal('models/SPRING.MP4', 'SPRING')">
+      <img src="thumbnails/SPRING.jpg" alt="SPRING">
+      <div class="overlay">SPRING</div>
+    </div>
+    <div class="card" onclick="openModal('models/SCREW-2.MP4', 'Screw-2')">
+      <img src="thumbnails/SCREW-2.jpg" alt="Screw-2">
+      <div class="overlay">Screw-2</div>
+    </div>
+    <div class="card" onclick="openModal('models/KC-8.MP4', 'Kc-8')">
+      <img src="thumbnails/Kc-8.jpg" alt="Kc-8">
+      <div class="overlay">KC-8</div>
+    </div>
+     <div class="card" onclick="openModal('models/Crankshaft.MP4', 'Crankshaft')">
+      <img src="thumbnails/Crankshaft.jpg" alt="Crankshaft">
+      <div class="overlay">Crankshaft</div>
+    </div>
+     <div class="card" onclick="openModal('models/Glider.MP4', 'Glider')">
+      <img src="thumbnails/Glider.jpg" alt="Glider">
+      <div class="overlay">Glider</div>
+    </div>
+     <div class="card" onclick="openModal('models/Drone-2.MP4', 'Drone-2')">
+      <img src="thumbnails/Drone-2.jpg" alt="Drone-2">
+      <div class="overlay">Drone-2</div>
+    </div>
+    <div class="card" onclick="openModal('models/Torque Wrench.MP4', 'Torque Wrench')">
+      <img src="thumbnails/Torque Wrench.jpg" alt="Torque Wrench">
+      <div class="overlay">Torque Wrench</div>
+    </div>
+     <div class="card" onclick="openModal('models/Landing Gear.MP4', 'Landing Gear')">
+      <img src="thumbnails/Landing Gear.jpg" alt="Landing Gear">
+      <div class="overlay">Landing Gear</div>
+    </div>
+    <div class="card" onclick="openModal('models/Pencil-Inspired-Aircraft.MP4', 'Pencil-Inspired-Aircraft')">
+      <img src="thumbnails/Pencil-Inspired-Aircraft.jpg" alt="Pencil-Inspired-Aircraft">
+      <div class="overlay">Pencil-Inspired-Aircraft</div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="videoModal">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <h2 id="videoTitle"></h2>
+    <video id="modalVideo" controls autoplay></video>
+  </div>
+
+  <script>
+    function openModal(videoSrc, title) {
+      const modal = document.getElementById("videoModal");
+      const video = document.getElementById("modalVideo");
+      const videoTitle = document.getElementById("videoTitle");
+
+      video.src = videoSrc;
+      videoTitle.innerText = title;
+
+      // Show modal
+      modal.style.display = "flex";
+
+      // Adjust video size based on landscape ratio
+      video.addEventListener('loadedmetadata', () => {
+        const aspectRatio = video.videoWidth / video.videoHeight;
+        const maxHeight = window.innerHeight * 0.8;
+        const containerWidth = maxHeight * aspectRatio;
+
+        video.style.width = containerWidth + "px";
+        video.style.height = maxHeight + "px";
+      }, { once: true });
+
+      video.play();
+    }
+
+    function closeModal() {
+      const modal = document.getElementById("videoModal");
+      const video = document.getElementById("modalVideo");
+
+      video.pause();
+      video.src = "";
+      video.style.width = "";
+      video.style.height = "";
+      modal.style.display = "none";
+    }
+
+    // Optional: Resize video dynamically on window resize
+    window.addEventListener('resize', () => {
+      const video = document.getElementById("modalVideo");
+      if (video.src) {
+        const aspectRatio = video.videoWidth / video.videoHeight;
+        const maxHeight = window.innerHeight * 0.8;
+        const containerWidth = maxHeight * aspectRatio;
+
+        video.style.width = containerWidth + "px";
+        video.style.height = maxHeight + "px";
+      }
+    });
+  </script>
+</body>
+</html>

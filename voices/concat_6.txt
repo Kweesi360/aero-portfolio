@@ -1,0 +1,3 @@
+file 'voices\static_start_6.wav'
+file 'voices\voice_6_ATC_radio.mp3'
+file 'voices\static_end_6.wav'
