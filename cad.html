@@ -246,7 +246,7 @@
 </div>
 
 
- <!-- Modal -->
+<!-- Modal -->
 <div class="modal" id="videoModal">
   <span class="close" onclick="closeModal()">&times;</span>
   <h2 id="videoTitle"></h2>
@@ -259,14 +259,19 @@
     const video = document.getElementById("modalVideo");
     const videoTitle = document.getElementById("videoTitle");
 
+    // Convert relative path to GitHub raw URL
+    const base = "https://raw.githubusercontent.com/Kweesi360/aero-portfolio/main/";
+    const finalSrc = videoSrc.startsWith("http") ? videoSrc : base + videoSrc.toLowerCase();
+
     video.pause();
-    video.src = videoSrc;
-    video.load(); // important
+    video.src = finalSrc;
+    video.load(); // reload video
     video.play().catch(err => console.warn("Autoplay prevented:", err));
 
     videoTitle.innerText = title;
     modal.style.display = "flex";
 
+    // Adjust video size based on aspect ratio
     video.addEventListener("loadedmetadata", () => {
       const aspectRatio = video.videoWidth / video.videoHeight;
       const maxHeight = window.innerHeight * 0.8;
@@ -287,6 +292,7 @@
     modal.style.display = "none";
   }
 
+  // Resize video dynamically on window resize
   window.addEventListener('resize', () => {
     const video = document.getElementById("modalVideo");
     if (video.src) {
@@ -298,5 +304,6 @@
     }
   });
 </script>
+
 </body>
 </html>
