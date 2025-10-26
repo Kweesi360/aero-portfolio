@@ -61,23 +61,20 @@ function openModal(videoSrc, title) {
   const video = document.getElementById("modalVideo");
   const videoTitle = document.getElementById("videoTitle");
 
-  // Automatically convert relative paths to GitHub raw links
-  const base = "https://raw.githubusercontent.com/Kweesi360/aero-portfolio/main/";
-  const finalSrc = videoSrc.startsWith("http")
-    ? videoSrc
-    : base + videoSrc.toLowerCase();
+  // Convert relative path (like 'models/arm.mp4') to full GitHub raw URL
+  const githubBase = "https://raw.githubusercontent.com/Kweesi360/aero-portfolio/main/";
+  const fullVideoSrc = githubBase + videoSrc;
 
-  video.src = finalSrc;
+  video.src = fullVideoSrc;
   videoTitle.innerText = title;
 
-  // Optional: Rotate video if needed for display
-  video.style.transform = "rotate(90deg)";
+  // Ensure video plays normally (no rotation for now)
+  video.style.transform = "none";
 
   modal.style.display = "flex";
-
-  // Autoplay when opened
-  video.play();
+  video.play(); // auto-start playback
 }
+
 
 // Close modal when user clicks outside video or presses ESC
 window.addEventListener("click", (e) => {
