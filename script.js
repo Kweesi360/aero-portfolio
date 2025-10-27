@@ -58,59 +58,32 @@ form.addEventListener("submit", function(e) {
 });
 
 // =========================
-// Modal Video Handler (Local models folder)
+// Video Handler — Opens in New Tab (Google Drive or External)
 // =========================
-function openModal(videoSrc, title) {
-  const modal = document.getElementById("videoModal");
-  const video = document.getElementById("modalVideo");
-  const videoTitle = document.getElementById("videoTitle");
-
-  // Force lowercase path for consistency
-  const fixedSrc = videoSrc.toLowerCase();
-
-  video.src = fixedSrc;
-  videoTitle.innerText = title;
-
-  modal.style.display = "flex";
-  video.load();   // reloads the source
-  video.play();   // start playing automatically
+function openModal(videoUrl, title) {
+  // Opens the video directly in a new browser tab
+  if (videoUrl && videoUrl.startsWith("http")) {
+    window.open(videoUrl, "_blank");
+  } else {
+    console.warn("Invalid video URL:", videoUrl);
+    alert("Video unavailable. Please check the link.");
+  }
 }
 
-// Close modal when clicking outside video or pressing ESC
-window.addEventListener("click", (e) => {
-  const modal = document.getElementById("videoModal");
-  const video = document.getElementById("modalVideo");
-  if (e.target === modal) {
-    modal.style.display = "none";
-    video.pause();
-    video.src = "";
-  }
-});
-
-window.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") {
-    const modal = document.getElementById("videoModal");
-    const video = document.getElementById("modalVideo");
-    modal.style.display = "none";
-    video.pause();
-    video.src = "";
-  }
-});
-
 // =========================
-// Live WebSocket Subtitles (optional)
+// Optional: Subtitle WebSocket (for future use)
 // =========================
 const subtitleBox = document.getElementById('subtitle-box');
-const socket = new WebSocket("ws://localhost:8765");
-
-socket.onmessage = (event) => {
-  const data = JSON.parse(event.data);
-  subtitleBox.innerHTML = `<strong>${data.speaker}:</strong> ${data.text}`;
-  subtitleBox.style.display = 'block';
-
-  // Hide subtitle automatically after a few seconds
-  setTimeout(() => {
-    subtitleBox.style.display = 'none';
-  }, 5000);
-};
-
+if (subtitleBox) {
+  try {
+    const socket = new WebSocket("ws://localhost:8765");
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      subtitleBox.innerHTML = `<strong>${data.speaker}:</strong> ${data.text}`;
+      subtitleBox.style.display = 'block';
+      setTimeout(() => subtitleBox.style.display = 'none', 5000);
+    };
+  } catch (err) {
+    console.warn("WebSocket connection skipped (no local server).");
+  }
+}
