@@ -1318,3 +1318,25 @@ s
   color: #cccccc;
   font-family: monospace;
 }
+.company-logos {
+  display: flex;
+  flex-wrap: nowrap;           /* prevents wrapping onto new line */
+  justify-content: center;     /* centers them horizontally */
+  align-items: center;         /* vertically aligns */
+  gap: 20px;                   /* equal spacing between logos */
+  margin-top: 15px;
+  overflow-x: auto;            /* allows scroll if too many logos */
+  padding: 5px 0;
+}
+
+.company-logos img {
+  height: 50px;
+  width: auto;
+  object-fit: contain;
+  transition: transform 0.3s ease, filter 0.3s ease;
+}
+
+.company-logos img:hover {
+  transform: scale(1.1);
+  filter: brightness(1.2);
+}
