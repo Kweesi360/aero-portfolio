@@ -2,7 +2,7 @@
 // script.js - Aerospace Portfolio
 // =========================
 
-// Typing Animation in Hero Section
+// Typing Animation (same as before)
 const typingElement = document.getElementById("typing");
 const textArray = [
   "Future Aerospace Engineer 🚀",
@@ -36,19 +36,17 @@ function deleteText() {
 typeText();
 
 // =========================
-// Smooth Scroll for Internal Links
+// Smooth Scroll
 // =========================
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   anchor.addEventListener("click", function(e) {
     e.preventDefault();
-    document.querySelector(this.getAttribute("href")).scrollIntoView({
-      behavior: "smooth"
-    });
+    document.querySelector(this.getAttribute("href")).scrollIntoView({ behavior: "smooth" });
   });
 });
 
 // =========================
-// Simple Contact Form Handler (Front-end Only)
+// Contact Form
 // =========================
 const form = document.querySelector("form");
 form.addEventListener("submit", function(e) {
@@ -58,32 +56,8 @@ form.addEventListener("submit", function(e) {
 });
 
 // =========================
-// Video Handler — Opens in New Tab (Google Drive or External)
+// Video Open in New Tab
 // =========================
 function openModal(videoUrl, title) {
-  // Opens the video directly in a new browser tab
-  if (videoUrl && videoUrl.startsWith("http")) {
-    window.open(videoUrl, "_blank");
-  } else {
-    console.warn("Invalid video URL:", videoUrl);
-    alert("Video unavailable. Please check the link.");
-  }
-}
-
-// =========================
-// Optional: Subtitle WebSocket (for future use)
-// =========================
-const subtitleBox = document.getElementById('subtitle-box');
-if (subtitleBox) {
-  try {
-    const socket = new WebSocket("ws://localhost:8765");
-    socket.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      subtitleBox.innerHTML = `<strong>${data.speaker}:</strong> ${data.text}`;
-      subtitleBox.style.display = 'block';
-      setTimeout(() => subtitleBox.style.display = 'none', 5000);
-    };
-  } catch (err) {
-    console.warn("WebSocket connection skipped (no local server).");
-  }
+  window.open(videoUrl, '_blank');
 }
