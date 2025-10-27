@@ -117,7 +117,7 @@
   <!-- Video container -->
   <div id="video-container" class="centered">
     <video id="flight-video" playsinline preload="auto">
-      <source src="Flightbotsim.mp4" type="video/mp4">
+      <source src="lightbotsim.mp4" type="video/mp4">
       Your browser does not support the video tag.
     </video>
   </div>
@@ -130,7 +130,7 @@
     const videoContainer = document.getElementById('video-container');
     const flightVideo = document.getElementById('flight-video');
 
-    const flightBotText = `The next window showcases a pre-recorded simulation of FlightBot in action. Due to hardware limitations, running the live Python environment in real time proved challenging, resulting in occasional lag and performance drops within the Python display window.
+    const flightBotText = `Please chnage your screen resolution to full screen. The next window showcases a pre-recorded simulation of FlightBot in action. Due to hardware limitations, running the live Python environment in real time proved challenging, resulting in occasional lag and performance drops within the Python display window.
 
 To ensure a seamless experience, this recording presents the complete demonstration. It captures a high-intensity cockpit sequence in which an aircraft experiences dual engine failure during final approach for landing. The simulation features synchronized subtitles, FlightBot’s activation procedure, authentic cockpit alarm sounds, and communication between the Pilot, Co-Pilot, Cabin Crew, and Air Traffic Control, showcasing their calm composure as they trust FlightBot’s guidance while navigating toward the runway with or without ILS support.
 
@@ -173,7 +173,8 @@ Immerse yourself in a true-to-life aviation emergency powered by FlightBot’s i
         const ch=text[i]; typingDisplay.innerText+=ch;
         if(ch!==' '&&ch!=='\n'&&ch!=='\t') playKeystrokeSound();
         typingDisplay.scrollTop=typingDisplay.scrollHeight;
-        const delay=45+Math.random()*20-10;
+        const delay = 80 + Math.random() * 30;
+
         await new Promise(r=>setTimeout(r,delay));
       }
       await new Promise(r=>setTimeout(r,500));
