@@ -114,14 +114,3 @@ socket.onmessage = (event) => {
   }, 5000);
 };
 
-// Hover preview play
-document.querySelectorAll(".card").forEach(card => {
-  const video = card.querySelector(".preview");
-  card.addEventListener("mouseenter", () => {
-    video.currentTime = 0;
-    video.play();
-  });
-  card.addEventListener("mouseleave", () => {
-    video.pause();
-  });
-});

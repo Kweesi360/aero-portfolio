@@ -1350,39 +1350,15 @@ s
   background-color: #d63a00;
 }
 
-/* Card styling for hover-preview */
 .card {
-  position: relative;
-  width: 200px; /* adjust to your design */
-  height: 120px;
+  width: 250px;
+  height: 250px;
   overflow: hidden;
-  cursor: pointer;
-  display: inline-block;
-  margin: 5px;
+  position: relative;
+  border-radius: 20px;
 }
-
-.thumbnail {
+.preview, .thumbnail {
   width: 100%;
   height: 100%;
-  display: block;
   object-fit: cover;
-}
-
-.preview {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  display: none;
-  object-fit: cover;
-  pointer-events: none;
-}
-
-.card:hover .preview {
-  display: block;
-}
-
-.card:hover .thumbnail {
-  display: none;
 }
