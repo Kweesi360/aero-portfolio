@@ -62,6 +62,7 @@
     #typing-display {
       background:transparent; min-height:110px; color:var(--white); font-size:1.25rem; line-height:1.5;
       font-family: ui-monospace, Menlo, Monaco, monospace; white-space:pre-wrap; word-wrap:break-word;
+      max-height: 50vh; overflow-y: auto; padding-right: 12px;
     }
 
     /* video container */
@@ -72,6 +73,12 @@
 
     .fade-out { opacity:0; visibility:hidden; pointer-events:none; }
     .fade-in { opacity:1; visibility:visible; pointer-events:auto; }
+
+    /* small helper for the "preparing" page shown in popup initially */
+    .prepare-page {
+      display:flex; height:100vh; align-items:center; justify-content:center; color:#fff; background:#000;
+      font-family:Inter, Arial, sans-serif; font-size:1.1rem;
+    }
   </style>
 </head>
 <body>
@@ -84,37 +91,16 @@
   </div>
 
   <!-- Typing overlay -->
-<div id="typing-overlay" class="centered" style="flex-direction:column;">
-  <!-- Robot image -->
-  <img id="robot-top" src="images/robotic_ai.jpg" alt="Robot AI logo">
+  <div id="typing-overlay" class="centered" style="flex-direction:column;">
+    <!-- Robot image -->
+    <img id="robot-top" src="images/robotic_ai.jpg" alt="Robot AI logo">
 
-  <div class="typing-panel">
-    <div id="typing-display"></div>
+    <div class="typing-panel">
+      <div id="typing-display"></div>
+    </div>
   </div>
-</div>
 
-<style>
-  /* Robot image styling */
-  #robot-top {
-    width: 320px;          /* <-- adjust this to resize robot */
-    height: auto;          /* keeps aspect ratio */
-    margin-bottom: 28px;
-    filter: drop-shadow(0 12px 30px rgba(0,0,0,0.8)) 
-            brightness(1.2) 
-            contrast(1.2);
-    mix-blend-mode: lighten; /* removes black background edges on dark page */
-    transition: width 0.3s ease, filter 0.3s ease; /* optional smooth resize */
-  }
-
-  /* Optional: hover to slightly enlarge robot for effect */
-  #robot-top:hover {
-    width: 240px; /* adjust max size */
-    filter: drop-shadow(0 15px 35px rgba(0,0,0,0.8)) brightness(1.3) contrast(1.3);
-  }
-</style>
-
-
-  <!-- Video container -->
+  <!-- Video container (local fallback if needed) -->
   <div id="video-container" class="centered">
     <video id="flight-video" playsinline preload="auto">
       <source src="lightbotsim.mp4" type="video/mp4">
@@ -122,86 +108,240 @@
     </video>
   </div>
 
+  <!-- welcome sound (preload) -->
+  <audio id="welcome-sound" src="sounds/airport_welcome.mp3" preload="auto"></audio>
+
   <script>
+  (function(){
+    // ---------- CONFIG ----------
+    const DRIVE_PREVIEW_URL = 'https://drive.google.com/file/d/1zKeTQH0yGa9FFyJLv4a9zBybpdsoPok2/preview';
+    const TYPING_SPEED_MS_BASE = 75; // base delay (lower = faster)
+    const TYPING_VARIANCE = 25; // jitter
+    const POST_TYPE_WAIT_MS = 2000; // wait after typing ends before fade/welcome
+    // ----------------------------
+
     const preview = document.getElementById('preview');
     const runBtn = document.getElementById('run-btn');
     const typingOverlay = document.getElementById('typing-overlay');
     const typingDisplay = document.getElementById('typing-display');
     const videoContainer = document.getElementById('video-container');
     const flightVideo = document.getElementById('flight-video');
+    const welcomeSound = document.getElementById('welcome-sound');
 
+    // user text
     const flightBotText = `Please chnage your screen resolution to full screen. The next window showcases a pre-recorded simulation of FlightBot in action. Due to hardware limitations, running the live Python environment in real time proved challenging, resulting in occasional lag and performance drops within the Python display window.
 
 To ensure a seamless experience, this recording presents the complete demonstration. It captures a high-intensity cockpit sequence in which an aircraft experiences dual engine failure during final approach for landing. The simulation features synchronized subtitles, FlightBot’s activation procedure, authentic cockpit alarm sounds, and communication between the Pilot, Co-Pilot, Cabin Crew, and Air Traffic Control, showcasing their calm composure as they trust FlightBot’s guidance while navigating toward the runway with or without ILS support.
 
 Immerse yourself in a true-to-life aviation emergency powered by FlightBot’s intelligent response system, a fusion of code, realism, and human precision.`;
 
-    // WebAudio context for keystroke sounds
+    // AudioContext - created on first user gesture to ensure it can play
     let audioCtx = null;
     function ensureAudioContext() {
-      if (!audioCtx) { audioCtx = new (window.AudioContext||window.webkitAudioContext)(); }
-    }
-    function playKeystrokeSound() {
-      ensureAudioContext();
-      const ctx = audioCtx;
-      const g = ctx.createGain();
-      g.gain.value=0;
-      g.connect(ctx.destination);
-      const o = ctx.createOscillator();
-      o.type='square'; o.frequency.value=1200+Math.random()*200-100; o.connect(g);
-      const bufferSize = 0.05*ctx.sampleRate|0;
-      const noiseBuffer = ctx.createBuffer(1,bufferSize,ctx.sampleRate);
-      const data = noiseBuffer.getChannelData(0);
-      for(let i=0;i<bufferSize;i++) data[i]=(Math.random()*2-1)*(1-i/bufferSize);
-      const noise = ctx.createBufferSource();
-      noise.buffer=noiseBuffer;
-      const noiseFilter = ctx.createBiquadFilter(); noiseFilter.type='bandpass';
-      noiseFilter.frequency.value=2200;
-      noise.connect(noiseFilter); noiseFilter.connect(g);
-      const now=ctx.currentTime;
-      g.gain.setValueAtTime(0, now);
-      g.gain.linearRampToValueAtTime(0.18, now+0.002);
-      g.gain.exponentialRampToValueAtTime(0.0001, now+0.09);
-      o.start(now); noise.start(now); noise.stop(now+0.09); o.stop(now+0.12);
-    }
-
-    async function performTyping(text) {
-      typingDisplay.innerText='';
-      typingOverlay.style.display='flex';
-      await new Promise(r=>setTimeout(r,200));
-      for(let i=0;i<text.length;i++){
-        const ch=text[i]; typingDisplay.innerText+=ch;
-        if(ch!==' '&&ch!=='\n'&&ch!=='\t') playKeystrokeSound();
-        typingDisplay.scrollTop=typingDisplay.scrollHeight;
-        const delay = 80 + Math.random() * 30;
-
-        await new Promise(r=>setTimeout(r,delay));
+      if (!audioCtx) {
+        try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        catch(e) { console.warn('AudioContext failed:', e); audioCtx = null; }
       }
-      await new Promise(r=>setTimeout(r,500));
+      return audioCtx;
     }
 
+    function playKeystrokeSound() {
+      const ctx = ensureAudioContext();
+      if (!ctx) return;
+      const g = ctx.createGain();
+      g.gain.value = 0;
+      g.connect(ctx.destination);
+
+      const o = ctx.createOscillator();
+      o.type = 'square';
+      o.frequency.value = 1200 + Math.random()*200 - 100;
+      o.connect(g);
+
+      const bufferSize = Math.max(128, Math.floor(0.05 * ctx.sampleRate));
+      const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = noiseBuffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = (Math.random()*2 - 1) * (1 - i / bufferSize);
+      const noise = ctx.createBufferSource();
+      noise.buffer = noiseBuffer;
+      const noiseFilter = ctx.createBiquadFilter();
+      noiseFilter.type = 'bandpass';
+      noiseFilter.frequency.value = 2200;
+      noise.connect(noiseFilter);
+      noiseFilter.connect(g);
+
+      const now = ctx.currentTime;
+      g.gain.setValueAtTime(0, now);
+      g.gain.linearRampToValueAtTime(0.18, now + 0.002);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 0.09);
+
+      o.start(now); noise.start(now); noise.stop(now + 0.09); o.stop(now + 0.12);
+    }
+
+    // simple typing effect with slight random delays
+    async function performTyping(text) {
+      typingDisplay.innerText = '';
+      typingOverlay.style.display = 'flex';
+      await new Promise(r => setTimeout(r, 180));
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        typingDisplay.innerText += ch;
+        // play keystroke when not whitespace
+        if (ch !== ' ' && ch !== '\n' && ch !== '\t') playKeystrokeSound();
+        typingDisplay.scrollTop = typingDisplay.scrollHeight;
+        const delay = TYPING_SPEED_MS_BASE + (Math.random() * TYPING_VARIANCE - (TYPING_VARIANCE/2));
+        await new Promise(r => setTimeout(r, Math.max(20, Math.round(delay))));
+      }
+      // small pause at end
+      await new Promise(r => setTimeout(r, 500));
+    }
+
+    // fade to black overlay, then play welcome sound and launch video
+    function startFadeToBlackAndPlay(popupWindow) {
+      // fade overlay element
+      const fade = document.createElement('div');
+      fade.id = 'fade-overlay';
+      fade.style.position = 'fixed';
+      fade.style.top = 0;
+      fade.style.left = 0;
+      fade.style.width = '100%';
+      fade.style.height = '100%';
+      fade.style.background = 'black';
+      fade.style.opacity = 0;
+      fade.style.zIndex = 9998;
+      fade.style.transition = 'opacity 1.0s ease';
+      document.body.appendChild(fade);
+      setTimeout(() => { fade.style.opacity = 1; }, 60);
+
+      // wait POST_TYPE_WAIT_MS then play welcome sound
+      setTimeout(() => {
+        // play welcome sound (user gesture guaranteed because run button opened popup)
+        welcomeSound.currentTime = 0;
+        const playPromise = welcomeSound.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch(err => {
+            console.warn('welcome sound play prevented:', err);
+            // continue to launching video even if sound blocked
+            navigatePopupToDrive(popupWindow, fade);
+          }).then(() => {
+            welcomeSound.onended = () => navigatePopupToDrive(popupWindow, fade);
+          });
+        } else {
+          // no promise (older browsers) - just wait and then navigate
+          setTimeout(() => navigatePopupToDrive(popupWindow, fade), 1000);
+        }
+      }, POST_TYPE_WAIT_MS);
+    }
+
+    // Try to navigate the previously-opened popup (preferred). If popup was blocked or closed, embed iframe here.
+    function navigatePopupToDrive(popupWindow, fade) {
+      const driveUrl = DRIVE_PREVIEW_URL;
+      // If popup exists and not closed, navigate it
+      try {
+        if (popupWindow && !popupWindow.closed) {
+          popupWindow.location.href = driveUrl;
+          popupWindow.focus();
+          // attempt to request fullscreen in popup (likely blocked) - we can't force it reliably
+        } else {
+          // fallback to embedding an iframe locally
+          createIframeAndAttemptFullscreen(driveUrl);
+        }
+      } catch (e) {
+        console.warn('Could not use popup window (blocked or cross-origin). Falling back to iframe.', e);
+        createIframeAndAttemptFullscreen(driveUrl);
+      } finally {
+        // remove fade after short delay so transition feels smooth
+        setTimeout(() => { if (fade && fade.parentNode) fade.parentNode.removeChild(fade); }, 1500);
+      }
+    }
+
+    // create iframe and try to request fullscreen (might be blocked after async delays)
+    function createIframeAndAttemptFullscreen(url) {
+      // create iframe
+      const iframe = document.createElement('iframe');
+      iframe.src = url;
+      iframe.allow = 'autoplay; fullscreen';
+      iframe.style.position = 'fixed';
+      iframe.style.top = '0';
+      iframe.style.left = '0';
+      iframe.style.width = '100%';
+      iframe.style.height = '100%';
+      iframe.style.border = 'none';
+      iframe.style.zIndex = 9999;
+      document.body.appendChild(iframe);
+
+      // try to fullscreen the iframe (often blocked after async user gesture)
+      setTimeout(() => {
+        try {
+          if (iframe.requestFullscreen) iframe.requestFullscreen();
+          else if (iframe.webkitRequestFullscreen) iframe.webkitRequestFullscreen();
+          else console.warn('Fullscreen API not supported.');
+        } catch (err) {
+          console.warn('Fullscreen request blocked or failed:', err);
+        }
+      }, 300);
+    }
+
+    // main runner
     async function runSimulation() {
+      // open a popup immediately during the user click so it won't be blocked later
+      let popupWindow = null;
+      try {
+        popupWindow = window.open('', 'flightSimWindow', 'noopener,noreferrer');
+        if (popupWindow) {
+          // write a minimal "preparing" page to reduce confusion
+          try {
+            const doc = popupWindow.document;
+            doc.open();
+            doc.write(`<!doctype html><html><head><title>Preparing FlightBot demo</title><meta name="viewport" content="width=device-width,initial-scale=1"/></head><body style="margin:0;background:#000;color:#fff;font-family:Inter,Arial, sans-serif"><div class="prepare-page" style="height:100vh;display:flex;align-items:center;justify-content:center"><div>Preparing the FlightBot demonstration...<br><small>If the window remains blank, your browser blocked the popup. Try allowing popups for this site.</small></div></div></body></html>`);
+            doc.close();
+          } catch (e) {
+            // cross-origin or blocked writing — ignore
+          }
+        } else {
+          console.warn('Popup blocked at open time; will use iframe fallback later.');
+        }
+      } catch (e) {
+        console.warn('Popup open attempt failed:', e);
+      }
+
+      // hide preview
       preview.classList.add('fade-out');
-      preview.style.opacity=0; preview.style.visibility='hidden';
+      preview.style.opacity = 0;
+      preview.style.visibility = 'hidden';
+
+      // perform typing
       await performTyping(flightBotText);
-      typingOverlay.style.transition='opacity .8s ease';
-      typingOverlay.style.opacity=0;
-      setTimeout(()=>{ typingOverlay.style.display='none'; startVideo(); },820);
+
+      // after typing, start fade + welcome sound + navigate popup/iframe
+      startFadeToBlackAndPlay(popupWindow);
     }
 
-    function startVideo(){
-      videoContainer.style.display='flex';
-      videoContainer.style.opacity=0;
-      setTimeout(()=>{ videoContainer.style.opacity=1; },30);
-      flightVideo.currentTime=0;
-      flightVideo.volume=1.0;
-      flightVideo.play().catch(()=>{});
-      flightVideo.onended=()=>{ videoContainer.style.opacity=0; setTimeout(()=>{ videoContainer.style.display='none'; preview.style.opacity=1; preview.style.visibility='visible'; },500);}
+    // attach click handler
+    runBtn.addEventListener('click', () => {
+      // ensure AudioContext created on actual user gesture
+      ensureAudioContext();
+      runSimulation();
+    });
+
+    // OPTIONAL: if you still want the local fallback video to play inside the page
+    function startVideoLocalFallback() {
+      videoContainer.style.display = 'flex';
+      videoContainer.style.opacity = 0;
+      setTimeout(()=>{ videoContainer.style.opacity = 1; }, 30);
+      flightVideo.currentTime = 0;
+      flightVideo.volume = 1.0;
+      flightVideo.play().catch(()=>{ console.warn('Local fallback video could not autoplay.'); });
     }
 
-    runBtn.addEventListener('click', ()=>{ runSimulation(); });
+    // Expose for debugging from console if needed:
+    window.__flightbot_debug = {
+      runSimulation,
+      startLocalFallback: startVideoLocalFallback,
+      createIframeAndAttemptFullscreen
+    };
+
+  })();
   </script>
 
 </body>
 </html>
-``
